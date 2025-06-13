@@ -1,0 +1,159 @@
+{
+  "inspectorInfo": {
+    "inspectorName": "Sarah Johnson",
+    "facilityName": "Downtown Office Complex",
+    "date": "2024-01-15",
+    "shift": "morning",
+    "cleaningTeam": "Team Alpha"
+  },
+  "wins": [
+    {
+      "id": "1",
+      "description": "Restroom supplies were perfectly stocked and organized - great attention to detail!"
+    },
+    {
+      "id": "2", 
+      "description": "Lobby area was spotless and welcoming for early morning visitors"
+    },
+    {
+      "id": "3",
+      "description": "Team proactively addressed a spill in the break room before it became an issue"
+    }
+  ],
+  "cleanerFeedback": "The new cleaning supplies are working much better than the old ones. Would love to get a few more microfiber cloths for the windows. Overall, great shift today!",
+  "areas": [
+    {
+      "id": "restrooms",
+      "name": "Restrooms",
+      "weight": 0.25,
+      "items": [
+        {
+          "id": "toilets",
+          "name": "Toilets & Urinals",
+          "status": "green",
+          "comments": "All fixtures clean and sanitized properly",
+          "photos": []
+        },
+        {
+          "id": "sinks",
+          "name": "Sinks & Mirrors",
+          "status": "green",
+          "comments": "Mirrors streak-free, sinks spotless",
+          "photos": []
+        },
+        {
+          "id": "floors",
+          "name": "Floor & Drains",
+          "status": "yellow",
+          "comments": "Floor is clean but could use a deeper scrub around the edges",
+          "photos": []
+        },
+        {
+          "id": "supplies",
+          "name": "Supplies & Dispensers",
+          "status": "green",
+          "comments": "All dispensers full and functioning",
+          "photos": []
+        }
+      ]
+    },
+    {
+      "id": "offices",
+      "name": "Offices",
+      "weight": 0.3,
+      "items": [
+        {
+          "id": "desks",
+          "name": "Desks & Workstations",
+          "status": "green",
+          "comments": "All surfaces dusted and organized",
+          "photos": []
+        },
+        {
+          "id": "floors-office",
+          "name": "Floors & Carpets",
+          "status": "green",
+          "comments": "Vacuumed thoroughly, no visible debris",
+          "photos": []
+        },
+        {
+          "id": "trash-office",
+          "name": "Trash & Recycling",
+          "status": "green",
+          "comments": "All bins emptied and liners replaced",
+          "photos": []
+        },
+        {
+          "id": "windows",
+          "name": "Windows & Glass",
+          "status": "yellow",
+          "comments": "Most windows clean, but a few have water spots that need attention",
+          "photos": []
+        }
+      ]
+    },
+    {
+      "id": "common",
+      "name": "Common Areas",
+      "weight": 0.25,
+      "items": [
+        {
+          "id": "lobby",
+          "name": "Lobby & Reception",
+          "status": "green",
+          "comments": "Excellent presentation, very welcoming",
+          "photos": []
+        },
+        {
+          "id": "kitchen",
+          "name": "Kitchen & Break Room",
+          "status": "red",
+          "comments": "Coffee machine area needs immediate attention - spills and stains present",
+          "photos": []
+        },
+        {
+          "id": "hallways",
+          "name": "Hallways & Stairs",
+          "status": "green",
+          "comments": "Clean and well-maintained",
+          "photos": []
+        },
+        {
+          "id": "elevators",
+          "name": "Elevators",
+          "status": "green",
+          "comments": "Interior and buttons sanitized",
+          "photos": []
+        }
+      ]
+    },
+    {
+      "id": "exterior",
+      "name": "Exterior",
+      "weight": 0.2,
+      "items": [
+        {
+          "id": "entrance",
+          "name": "Entrance & Exits",
+          "status": "green",
+          "comments": "Doors clean, mats in good condition",
+          "photos": []
+        },
+        {
+          "id": "parking",
+          "name": "Parking Areas",
+          "status": "yellow",
+          "comments": "Some litter in the far corner that should be addressed",
+          "photos": []
+        },
+        {
+          "id": "landscaping",
+          "name": "Landscaping Areas",
+          "status": "green",
+          "comments": "Well-maintained, no debris",
+          "photos": []
+        }
+      ]
+    }
+  ]
+}
