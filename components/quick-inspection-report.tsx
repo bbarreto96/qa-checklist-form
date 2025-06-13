@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,8 +10,11 @@ import {
 	CheckCircle,
 	AlertTriangle,
 	AlertCircle,
+	Menu,
+	X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type QAStatus = "green" | "yellow" | "red" | "unset";
 
@@ -61,6 +64,30 @@ export default function QuickInspectionReport({
 	const [cleanerSignature, setCleanerSignature] = useState("");
 	const [cleanerName, setCleanerName] = useState("");
 	const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+	// Mobile detection and refs
+	const isMobile = useIsMobile();
+	const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+	// Close mobile menu when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				mobileMenuRef.current &&
+				!mobileMenuRef.current.contains(event.target as Node)
+			) {
+				setIsMobileMenuOpen(false);
+			}
+		};
+
+		if (isMobileMenuOpen) {
+			document.addEventListener("mousedown", handleClickOutside);
+			return () => {
+				document.removeEventListener("mousedown", handleClickOutside);
+			};
+		}
+	}, [isMobileMenuOpen]);
 
 	// Convert QA status to numerical score for calculations
 	const getStatusScore = (status: QAStatus): number => {
@@ -701,26 +728,91 @@ export default function QuickInspectionReport({
 
 	return (
 		<div className="max-w-4xl mx-auto bg-white min-h-screen">
-			{/* Action Buttons */}
-			<div className="no-print sticky top-0 bg-white border-b z-10 p-4 flex justify-between items-center shadow-sm">
-				<Button onClick={onBack} variant="outline">
-					← Back to Report Options
-				</Button>
-				<div className="flex gap-2">
-					<Button onClick={handlePrint} variant="outline" size="sm">
-						<Printer className="w-4 h-4 mr-2" />
-						Print Preview
-					</Button>
+			{/* Action Buttons - Desktop and Mobile */}
+			<div className="no-print sticky top-0 bg-white border-b z-20 p-4 shadow-sm">
+				<div className="flex justify-between items-center">
 					<Button
-						onClick={generatePDF}
-						variant="default"
-						size="sm"
-						disabled={isGeneratingPDF}
-						className="bg-green-600 hover:bg-green-700"
+						onClick={onBack}
+						variant="outline"
+						size={isMobile ? "default" : "default"}
+						className={cn(
+							"flex items-center gap-2",
+							isMobile ? "h-10 px-4 text-sm" : ""
+						)}
 					>
-						<Download className="w-4 h-4 mr-2" />
-						{isGeneratingPDF ? "Generating..." : "Export Quick PDF"}
+						← Back to Report Options
 					</Button>
+
+					{/* Desktop Action Buttons */}
+					{!isMobile && (
+						<div className="flex gap-2">
+							<Button onClick={handlePrint} variant="outline" size="sm">
+								<Printer className="w-4 h-4 mr-2" />
+								Print Preview
+							</Button>
+							<Button
+								onClick={generatePDF}
+								variant="default"
+								size="sm"
+								disabled={isGeneratingPDF}
+								className="bg-green-600 hover:bg-green-700"
+							>
+								<Download className="w-4 h-4 mr-2" />
+								{isGeneratingPDF ? "Generating..." : "Export Quick PDF"}
+							</Button>
+						</div>
+					)}
+
+					{/* Mobile Hamburger Menu */}
+					{isMobile && (
+						<div className="relative" ref={mobileMenuRef}>
+							<Button
+								onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+								variant="outline"
+								size="default"
+								className="h-10 w-10 p-0 border-gray-300"
+							>
+								{isMobileMenuOpen ? (
+									<X className="w-5 h-5" />
+								) : (
+									<Menu className="w-5 h-5" />
+								)}
+							</Button>
+
+							{/* Mobile Dropdown Menu */}
+							{isMobileMenuOpen && (
+								<div className="absolute right-0 top-12 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-30 animate-in slide-in-from-top-2 duration-200">
+									<div className="p-2 space-y-1">
+										<Button
+											onClick={() => {
+												handlePrint();
+												setIsMobileMenuOpen(false);
+											}}
+											variant="ghost"
+											size="default"
+											className="w-full justify-start h-12 px-4 text-left"
+										>
+											<Printer className="w-4 h-4 mr-3" />
+											Print Preview
+										</Button>
+										<Button
+											onClick={() => {
+												generatePDF();
+												setIsMobileMenuOpen(false);
+											}}
+											variant="ghost"
+											size="default"
+											disabled={isGeneratingPDF}
+											className="w-full justify-start h-12 px-4 text-left bg-green-50 hover:bg-green-100 text-green-700"
+										>
+											<Download className="w-4 h-4 mr-3" />
+											{isGeneratingPDF ? "Generating..." : "Export Quick PDF"}
+										</Button>
+									</div>
+								</div>
+							)}
+						</div>
+					)}
 				</div>
 			</div>
 

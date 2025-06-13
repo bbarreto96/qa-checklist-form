@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,11 +20,14 @@ import {
 	Upload,
 	Check,
 	X,
+	Menu,
+	ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import QuickInspectionReport from "./quick-inspection-report";
 import { toast } from "sonner";
 import { SheetsSubmissionData, SheetsSubmissionResponse } from "@/lib/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type QAStatus = "green" | "yellow" | "red" | "unset";
 
@@ -75,6 +78,30 @@ export default function QAReport({ data, formId, onBack }: QAReportProps) {
 	const [showQuickReport, setShowQuickReport] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isSubmitted, setIsSubmitted] = useState(false);
+	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+	// Mobile detection and refs
+	const isMobile = useIsMobile();
+	const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+	// Close mobile menu when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				mobileMenuRef.current &&
+				!mobileMenuRef.current.contains(event.target as Node)
+			) {
+				setIsMobileMenuOpen(false);
+			}
+		};
+
+		if (isMobileMenuOpen) {
+			document.addEventListener("mousedown", handleClickOutside);
+			return () => {
+				document.removeEventListener("mousedown", handleClickOutside);
+			};
+		}
+	}, [isMobileMenuOpen]);
 
 	// Status calculation functions
 	const getStatusIcon = (status: QAStatus) => {
@@ -1128,62 +1155,170 @@ export default function QAReport({ data, formId, onBack }: QAReportProps) {
 
 	return (
 		<div className="max-w-4xl mx-auto bg-white min-h-screen">
-			{/* Action Buttons */}
-			<div className="no-print sticky top-0 bg-white border-b z-10 p-4 flex justify-between items-center shadow-sm">
-				<Button onClick={onBack} variant="outline">
-					← Back to Checklist
-				</Button>
-				<div className="flex gap-2">
+			{/* Action Buttons - Desktop and Mobile */}
+			<div className="no-print sticky top-0 bg-white border-b z-20 p-4 shadow-sm">
+				<div className="flex justify-between items-center">
 					<Button
-						onClick={() => setShowQuickReport(true)}
+						onClick={onBack}
 						variant="outline"
-						size="sm"
-						className="bg-green-50 hover:bg-green-100 border-green-300 text-green-700"
-					>
-						⚡ Quick Summary
-					</Button>
-					<Button onClick={handlePrint} variant="outline" size="sm">
-						<Printer className="w-4 h-4 mr-2" />
-						Print Preview
-					</Button>
-					<Button
-						onClick={generatePDF}
-						variant="outline"
-						size="sm"
-						disabled={isGeneratingPDF}
-					>
-						<Download className="w-4 h-4 mr-2" />
-						{isGeneratingPDF ? "Generating..." : "Export PDF"}
-					</Button>
-					<Button
-						onClick={handleSubmitToSheets}
-						variant="default"
-						size="sm"
-						disabled={isSubmitting || isSubmitted}
+						size={isMobile ? "default" : "default"}
 						className={cn(
-							"transition-all duration-200",
-							isSubmitted
-								? "bg-green-600 hover:bg-green-700 text-white"
-								: "bg-blue-600 hover:bg-blue-700 text-white"
+							"flex items-center gap-2",
+							isMobile ? "h-10 px-4 text-sm" : ""
 						)}
 					>
-						{isSubmitting ? (
-							<>
-								<div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
-								Submitting...
-							</>
-						) : isSubmitted ? (
-							<>
-								<Check className="w-4 h-4 mr-2" />
-								Submitted
-							</>
-						) : (
-							<>
-								<Upload className="w-4 h-4 mr-2" />
-								Submit to Sheets
-							</>
-						)}
+						← Back to Checklist
 					</Button>
+
+					{/* Desktop Action Buttons */}
+					{!isMobile && (
+						<div className="flex gap-2">
+							<Button
+								onClick={() => setShowQuickReport(true)}
+								variant="outline"
+								size="sm"
+								className="bg-green-50 hover:bg-green-100 border-green-300 text-green-700"
+							>
+								⚡ Quick Summary
+							</Button>
+							<Button onClick={handlePrint} variant="outline" size="sm">
+								<Printer className="w-4 h-4 mr-2" />
+								Print Preview
+							</Button>
+							<Button
+								onClick={generatePDF}
+								variant="outline"
+								size="sm"
+								disabled={isGeneratingPDF}
+							>
+								<Download className="w-4 h-4 mr-2" />
+								{isGeneratingPDF ? "Generating..." : "Export PDF"}
+							</Button>
+							<Button
+								onClick={handleSubmitToSheets}
+								variant="default"
+								size="sm"
+								disabled={isSubmitting || isSubmitted}
+								className={cn(
+									"transition-all duration-200",
+									isSubmitted
+										? "bg-green-600 hover:bg-green-700 text-white"
+										: "bg-blue-600 hover:bg-blue-700 text-white"
+								)}
+							>
+								{isSubmitting ? (
+									<>
+										<div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
+										Submitting...
+									</>
+								) : isSubmitted ? (
+									<>
+										<Check className="w-4 h-4 mr-2" />
+										Submitted
+									</>
+								) : (
+									<>
+										<Upload className="w-4 h-4 mr-2" />
+										Submit to Sheets
+									</>
+								)}
+							</Button>
+						</div>
+					)}
+
+					{/* Mobile Hamburger Menu */}
+					{isMobile && (
+						<div className="relative" ref={mobileMenuRef}>
+							<Button
+								onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+								variant="outline"
+								size="default"
+								className="h-10 w-10 p-0 border-gray-300"
+							>
+								{isMobileMenuOpen ? (
+									<X className="w-5 h-5" />
+								) : (
+									<Menu className="w-5 h-5" />
+								)}
+							</Button>
+
+							{/* Mobile Dropdown Menu */}
+							{isMobileMenuOpen && (
+								<div className="absolute right-0 top-12 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-30 animate-in slide-in-from-top-2 duration-200">
+									<div className="p-2 space-y-1">
+										<Button
+											onClick={() => {
+												setShowQuickReport(true);
+												setIsMobileMenuOpen(false);
+											}}
+											variant="ghost"
+											size="default"
+											className="w-full justify-start h-12 px-4 text-left bg-green-50 hover:bg-green-100 border-green-300 text-green-700"
+										>
+											⚡ Quick Summary
+										</Button>
+										<Button
+											onClick={() => {
+												handlePrint();
+												setIsMobileMenuOpen(false);
+											}}
+											variant="ghost"
+											size="default"
+											className="w-full justify-start h-12 px-4 text-left"
+										>
+											<Printer className="w-4 h-4 mr-3" />
+											Print Preview
+										</Button>
+										<Button
+											onClick={() => {
+												generatePDF();
+												setIsMobileMenuOpen(false);
+											}}
+											variant="ghost"
+											size="default"
+											disabled={isGeneratingPDF}
+											className="w-full justify-start h-12 px-4 text-left"
+										>
+											<Download className="w-4 h-4 mr-3" />
+											{isGeneratingPDF ? "Generating..." : "Export PDF"}
+										</Button>
+										<Button
+											onClick={() => {
+												handleSubmitToSheets();
+												setIsMobileMenuOpen(false);
+											}}
+											variant="ghost"
+											size="default"
+											disabled={isSubmitting || isSubmitted}
+											className={cn(
+												"w-full justify-start h-12 px-4 text-left transition-all duration-200",
+												isSubmitted
+													? "bg-green-50 text-green-700 hover:bg-green-100"
+													: "bg-blue-50 text-blue-700 hover:bg-blue-100"
+											)}
+										>
+											{isSubmitting ? (
+												<>
+													<div className="w-4 h-4 mr-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+													Submitting...
+												</>
+											) : isSubmitted ? (
+												<>
+													<Check className="w-4 h-4 mr-3" />
+													Submitted
+												</>
+											) : (
+												<>
+													<Upload className="w-4 h-4 mr-3" />
+													Submit to Sheets
+												</>
+											)}
+										</Button>
+									</div>
+								</div>
+							)}
+						</div>
+					)}
 				</div>
 			</div>
 

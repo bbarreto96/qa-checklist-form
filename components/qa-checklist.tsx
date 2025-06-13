@@ -9,6 +9,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
 	Select,
 	SelectContent,
 	SelectItem,
@@ -28,9 +39,18 @@ import {
 	ChevronRight,
 	Copy,
 	Check,
+	Save,
+	Smartphone,
+	Wifi,
+	WifiOff,
+	RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import QAReport from "./qa-report";
+import OfflineIndicator from "./offline-indicator";
+import MobileCamera from "./mobile-camera";
+import { useOfflineStorage } from "@/hooks/use-offline-storage";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // QA Status type for tier-based grading
 type QAStatus = "green" | "yellow" | "red" | "unset";
@@ -107,9 +127,171 @@ const FORM_STEPS: FormStep[] = [
 	},
 ];
 
+// Initial state factory functions
+const getInitialInspectorInfo = () => ({
+	inspectorName: "",
+	facilityName: "",
+	date: new Date().toISOString().split("T")[0],
+	shift: "",
+	cleaningTeam: "",
+});
+
+const getInitialWins = (): WinsEntry[] => [{ id: "1", description: "" }];
+
+const getInitialAreas = (): InspectionArea[] => [
+	{
+		id: "restrooms",
+		name: "Restrooms",
+		weight: 0.25,
+		items: [
+			{
+				id: "toilets",
+				name: "Toilets & Urinals",
+				status: "unset",
+				comments: "",
+				photos: [],
+			},
+			{
+				id: "sinks",
+				name: "Sinks & Mirrors",
+				status: "unset",
+				comments: "",
+				photos: [],
+			},
+			{
+				id: "floors",
+				name: "Floor & Drains",
+				status: "unset",
+				comments: "",
+				photos: [],
+			},
+			{
+				id: "supplies",
+				name: "Supplies & Dispensers",
+				status: "unset",
+				comments: "",
+				photos: [],
+			},
+		],
+	},
+	{
+		id: "offices",
+		name: "Offices",
+		weight: 0.3,
+		items: [
+			{
+				id: "desks",
+				name: "Desks & Workstations",
+				status: "unset",
+				comments: "",
+				photos: [],
+			},
+			{
+				id: "floors-offices",
+				name: "Floors & Carpets",
+				status: "unset",
+				comments: "",
+				photos: [],
+			},
+			{
+				id: "trash",
+				name: "Trash & Recycling",
+				status: "unset",
+				comments: "",
+				photos: [],
+			},
+			{
+				id: "windows",
+				name: "Windows & Glass",
+				status: "unset",
+				comments: "",
+				photos: [],
+			},
+		],
+	},
+	{
+		id: "common",
+		name: "Common Areas",
+		weight: 0.25,
+		items: [
+			{
+				id: "lobby",
+				name: "Lobby & Reception",
+				status: "unset",
+				comments: "",
+				photos: [],
+			},
+			{
+				id: "kitchen",
+				name: "Kitchen & Break Room",
+				status: "unset",
+				comments: "",
+				photos: [],
+			},
+			{
+				id: "hallways",
+				name: "Hallways & Stairs",
+				status: "unset",
+				comments: "",
+				photos: [],
+			},
+			{
+				id: "elevators",
+				name: "Elevators",
+				status: "unset",
+				comments: "",
+				photos: [],
+			},
+		],
+	},
+	{
+		id: "exterior",
+		name: "Exterior",
+		weight: 0.2,
+		items: [
+			{
+				id: "entrance",
+				name: "Entrance & Exits",
+				status: "unset",
+				comments: "",
+				photos: [],
+			},
+			{
+				id: "parking",
+				name: "Parking Areas",
+				status: "unset",
+				comments: "",
+				photos: [],
+			},
+			{
+				id: "landscaping",
+				name: "Landscaping Areas",
+				status: "unset",
+				comments: "",
+				photos: [],
+			},
+		],
+	},
+];
+
 export default function QAChecklist() {
 	const [currentStep, setCurrentStep] = useState(0);
 	const [showReport, setShowReport] = useState(false);
+	const [showMobileCamera, setShowMobileCamera] = useState(false);
+	const [currentPhotoContext, setCurrentPhotoContext] = useState<{
+		areaId: string;
+		itemId: string;
+	} | null>(null);
+
+	// Mobile and offline hooks
+	const isMobile = useIsMobile();
+	const {
+		isOnline,
+		isInitialized,
+		saveFormData,
+		loadFormData,
+		error: offlineError,
+	} = useOfflineStorage();
 
 	// Generate unique form ID (client-side only to avoid hydration mismatch)
 	const generateFormId = () => {
@@ -123,161 +305,89 @@ export default function QAChecklist() {
 
 	const [formId, setFormId] = useState<string>("");
 	const [isFormIdCopied, setIsFormIdCopied] = useState(false);
+	const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+	const [lastSaved, setLastSaved] = useState<Date | null>(null);
+	const [showResetDialog, setShowResetDialog] = useState(false);
 
 	// Generate form ID on client side only to avoid hydration mismatch
 	useEffect(() => {
-		setFormId(generateFormId());
-	}, []);
+		const newFormId = generateFormId();
+		setFormId(newFormId);
 
-	const [inspectorInfo, setInspectorInfo] = useState({
-		inspectorName: "",
-		facilityName: "",
-		date: new Date().toISOString().split("T")[0],
-		shift: "",
-		cleaningTeam: "",
-	});
+		// Try to load existing form data
+		if (isInitialized) {
+			loadFormData(newFormId).then((data) => {
+				if (data) {
+					// Restore form state from saved data
+					setInspectorInfo(data.inspectorInfo);
+					setAreas(data.areas);
+					setWins(data.wins);
+					setCleanerFeedback(data.cleanerFeedback);
+				}
+			});
+		}
+	}, [isInitialized]);
 
-	const [wins, setWins] = useState<WinsEntry[]>([{ id: "1", description: "" }]);
+	const [inspectorInfo, setInspectorInfo] = useState(getInitialInspectorInfo);
+
+	const [wins, setWins] = useState<WinsEntry[]>(getInitialWins);
 
 	const [cleanerFeedback, setCleanerFeedback] = useState("");
 
-	const [areas, setAreas] = useState<InspectionArea[]>([
-		{
-			id: "restrooms",
-			name: "Restrooms",
-			weight: 0.25,
-			items: [
-				{
-					id: "toilets",
-					name: "Toilets & Urinals",
-					status: "unset",
-					comments: "",
-					photos: [],
-				},
-				{
-					id: "sinks",
-					name: "Sinks & Mirrors",
-					status: "unset",
-					comments: "",
-					photos: [],
-				},
-				{
-					id: "floors",
-					name: "Floor & Drains",
-					status: "unset",
-					comments: "",
-					photos: [],
-				},
-				{
-					id: "supplies",
-					name: "Supplies & Dispensers",
-					status: "unset",
-					comments: "",
-					photos: [],
-				},
-			],
-		},
-		{
-			id: "offices",
-			name: "Offices",
-			weight: 0.3,
-			items: [
-				{
-					id: "desks",
-					name: "Desks & Workstations",
-					status: "unset",
-					comments: "",
-					photos: [],
-				},
-				{
-					id: "floors-office",
-					name: "Floors & Carpets",
-					status: "unset",
-					comments: "",
-					photos: [],
-				},
-				{
-					id: "trash-office",
-					name: "Trash & Recycling",
-					status: "unset",
-					comments: "",
-					photos: [],
-				},
-				{
-					id: "windows",
-					name: "Windows & Glass",
-					status: "unset",
-					comments: "",
-					photos: [],
-				},
-			],
-		},
-		{
-			id: "common",
-			name: "Common Areas",
-			weight: 0.25,
-			items: [
-				{
-					id: "lobby",
-					name: "Lobby & Reception",
-					status: "unset",
-					comments: "",
-					photos: [],
-				},
-				{
-					id: "kitchen",
-					name: "Kitchen & Break Room",
-					status: "unset",
-					comments: "",
-					photos: [],
-				},
-				{
-					id: "hallways",
-					name: "Hallways & Stairs",
-					status: "unset",
-					comments: "",
-					photos: [],
-				},
-				{
-					id: "elevators",
-					name: "Elevators",
-					status: "unset",
-					comments: "",
-					photos: [],
-				},
-			],
-		},
-		{
-			id: "exterior",
-			name: "Exterior",
-			weight: 0.2,
-			items: [
-				{
-					id: "entrance",
-					name: "Entrance & Exits",
-					status: "unset",
-					comments: "",
-					photos: [],
-				},
-				{
-					id: "parking",
-					name: "Parking Areas",
-					status: "unset",
-					comments: "",
-					photos: [],
-				},
-				{
-					id: "landscaping",
-					name: "Landscaping Areas",
-					status: "unset",
-					comments: "",
-					photos: [],
-				},
-			],
-		},
-	]);
+	const [areas, setAreas] = useState<InspectionArea[]>(getInitialAreas);
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	// Auto-save functionality
+	const autoSaveForm = async () => {
+		if (!autoSaveEnabled || !formId || !isInitialized) return;
+
+		// Check if there's any meaningful data to save
+		const hasData =
+			inspectorInfo.inspectorName.trim() ||
+			inspectorInfo.facilityName.trim() ||
+			areas.some((area) =>
+				area.items.some(
+					(item) => item.status !== "unset" || item.comments.trim()
+				)
+			) ||
+			wins.some((win) => win.description.trim()) ||
+			cleanerFeedback.trim();
+
+		if (!hasData) return; // Don't save empty forms
+
+		try {
+			const formData = {
+				inspectorInfo,
+				areas,
+				wins,
+				cleanerFeedback,
+			};
+
+			await saveFormData(formId, formData, "draft");
+			setLastSaved(new Date());
+		} catch (err) {
+			console.error("Auto-save failed:", err);
+			// Don't show error to user for auto-save failures
+		}
+	};
+
+	// Auto-save when form data changes
+	useEffect(() => {
+		if (!autoSaveEnabled || !formId || !isInitialized) return;
+
+		const timeoutId = setTimeout(autoSaveForm, 2000); // Save after 2 seconds of inactivity
+		return () => clearTimeout(timeoutId);
+	}, [
+		inspectorInfo,
+		areas,
+		wins,
+		cleanerFeedback,
+		autoSaveEnabled,
+		formId,
+		isInitialized,
+		autoSaveForm,
+	]);
 
 	// Form ID copy functionality
 	const copyFormId = async () => {
@@ -288,6 +398,40 @@ export default function QAChecklist() {
 			setTimeout(() => setIsFormIdCopied(false), 2000);
 		} catch (err) {
 			console.error("Failed to copy form ID:", err);
+		}
+	};
+
+	// Reset form functionality
+	const handleResetForm = async () => {
+		try {
+			// Clear any saved data for current form
+			if (formId && isInitialized) {
+				// Note: We could add a clearFormData function to the offline storage hook if needed
+				// For now, we'll just reset the state and generate a new form ID
+			}
+
+			// Reset all form state
+			setCurrentStep(0);
+			setShowReport(false);
+			setShowMobileCamera(false);
+			setCurrentPhotoContext(null);
+			setInspectorInfo(getInitialInspectorInfo());
+			setWins(getInitialWins());
+			setCleanerFeedback("");
+			setAreas(getInitialAreas());
+			setLastSaved(null);
+			setIsFormIdCopied(false);
+
+			// Generate new form ID
+			const newFormId = generateFormId();
+			setFormId(newFormId);
+
+			// Close reset dialog
+			setShowResetDialog(false);
+
+			console.log("Form reset successfully");
+		} catch (err) {
+			console.error("Failed to reset form:", err);
 		}
 	};
 
@@ -342,24 +486,50 @@ export default function QAChecklist() {
 				const reader = new FileReader();
 				reader.onload = (e) => {
 					const photoUrl = e.target?.result as string;
-					setAreas((prev) =>
-						prev.map((area) =>
-							area.id === areaId
-								? {
-										...area,
-										items: area.items.map((item) =>
-											item.id === itemId
-												? { ...item, photos: [...item.photos, photoUrl] }
-												: item
-										),
-								  }
-								: area
-						)
-					);
+					addPhotoToItem(areaId, itemId, photoUrl);
 				};
 				reader.readAsDataURL(file);
 			});
 		}
+	};
+
+	const addPhotoToItem = (areaId: string, itemId: string, photoUrl: string) => {
+		setAreas((prev) =>
+			prev.map((area) =>
+				area.id === areaId
+					? {
+							...area,
+							items: area.items.map((item) =>
+								item.id === itemId
+									? { ...item, photos: [...item.photos, photoUrl] }
+									: item
+							),
+					  }
+					: area
+			)
+		);
+	};
+
+	const handleMobileCameraOpen = (areaId: string, itemId: string) => {
+		setCurrentPhotoContext({ areaId, itemId });
+		setShowMobileCamera(true);
+	};
+
+	const handleMobileCameraCapture = (photoDataUrl: string) => {
+		if (currentPhotoContext) {
+			addPhotoToItem(
+				currentPhotoContext.areaId,
+				currentPhotoContext.itemId,
+				photoDataUrl
+			);
+		}
+		setShowMobileCamera(false);
+		setCurrentPhotoContext(null);
+	};
+
+	const handleMobileCameraClose = () => {
+		setShowMobileCamera(false);
+		setCurrentPhotoContext(null);
 	};
 
 	const removePhoto = (areaId: string, itemId: string, photoIndex: number) => {
@@ -524,9 +694,24 @@ export default function QAChecklist() {
 		}
 	};
 
-	const handleSubmit = () => {
+	const handleSubmit = async () => {
 		if (validateCurrentStep()) {
-			setShowReport(true);
+			// Save completed form
+			try {
+				const formData = {
+					inspectorInfo,
+					areas,
+					wins,
+					cleanerFeedback,
+				};
+
+				await saveFormData(formId, formData, "completed");
+				setShowReport(true);
+			} catch (err) {
+				console.error("Failed to save completed form:", err);
+				// Still show report even if save fails
+				setShowReport(true);
+			}
 		}
 	};
 
@@ -628,39 +813,138 @@ export default function QAChecklist() {
 		);
 	}
 
+	// Mobile camera component
+	if (showMobileCamera) {
+		return (
+			<MobileCamera
+				onPhotoCapture={handleMobileCameraCapture}
+				onClose={handleMobileCameraClose}
+				maxPhotos={5}
+				currentPhotoCount={
+					currentPhotoContext
+						? areas
+								.find((a) => a.id === currentPhotoContext.areaId)
+								?.items.find((i) => i.id === currentPhotoContext.itemId)?.photos
+								.length || 0
+						: 0
+				}
+			/>
+		);
+	}
+
 	return (
 		<div className="max-w-md mx-auto bg-white min-h-screen">
 			{/* Form ID Display - Positioned at the very top */}
 			<div className="bg-gray-50 border-b border-gray-200 px-4 py-3">
 				<div className="flex items-center justify-between">
-					<div className="flex-1">
+					<div className="flex-1 min-w-0">
 						<Label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
 							Form ID
 						</Label>
-						<div className="text-sm font-mono font-semibold text-gray-900 mt-1">
+						<div className="text-sm font-mono font-semibold text-gray-900 mt-1 truncate">
 							{formId || "Generating..."}
 						</div>
 					</div>
-					<Button
-						onClick={copyFormId}
-						variant="outline"
-						size="sm"
-						disabled={!formId}
-						className="ml-3 h-8 px-3 text-xs border-gray-300 hover:bg-gray-100 disabled:opacity-50"
-					>
-						{isFormIdCopied ? (
-							<>
-								<Check className="w-3 h-3 mr-1 text-green-600" />
-								<span className="text-green-600">Copied</span>
-							</>
-						) : (
-							<>
-								<Copy className="w-3 h-3 mr-1" />
-								Copy
-							</>
-						)}
-					</Button>
+					<div className="flex items-center gap-3 ml-3">
+						{/* Offline Indicator */}
+						<OfflineIndicator showDetails={false} />
+
+						{/* Copy Button - Mobile optimized */}
+						<Button
+							onClick={copyFormId}
+							variant="outline"
+							size={isMobile ? "default" : "sm"}
+							disabled={!formId}
+							className={cn(
+								"border-gray-300 hover:bg-gray-100 disabled:opacity-50",
+								isMobile ? "h-10 px-4 text-sm min-w-[80px]" : "h-8 px-3 text-xs"
+							)}
+						>
+							{isFormIdCopied ? (
+								<>
+									<Check
+										className={cn(
+											"text-green-600",
+											isMobile ? "w-4 h-4 mr-2" : "w-3 h-3 mr-1"
+										)}
+									/>
+									<span className="text-green-600">Copied</span>
+								</>
+							) : (
+								<>
+									<Copy
+										className={cn(isMobile ? "w-4 h-4 mr-2" : "w-3 h-3 mr-1")}
+									/>
+									Copy
+								</>
+							)}
+						</Button>
+
+						{/* Reset Button with Confirmation Dialog */}
+						<AlertDialog
+							open={showResetDialog}
+							onOpenChange={setShowResetDialog}
+						>
+							<AlertDialogTrigger asChild>
+								<Button
+									variant="outline"
+									size={isMobile ? "default" : "sm"}
+									className={cn(
+										"border-red-300 hover:bg-red-50 text-red-600 hover:text-red-700",
+										isMobile
+											? "h-10 px-4 text-sm min-w-[80px]"
+											: "h-8 px-3 text-xs"
+									)}
+								>
+									<RotateCcw
+										className={cn(isMobile ? "w-4 h-4 mr-2" : "w-3 h-3 mr-1")}
+									/>
+									Reset
+								</Button>
+							</AlertDialogTrigger>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>Reset QA Checklist</AlertDialogTitle>
+									<AlertDialogDescription>
+										Are you sure you want to start over? This will clear all
+										form data including:
+										<br />• Inspector information
+										<br />• All inspection assessments
+										<br />• Photos and comments
+										<br />• Wins and feedback
+										<br />
+										<br />
+										This action cannot be undone.
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter>
+									<AlertDialogCancel>Cancel</AlertDialogCancel>
+									<AlertDialogAction
+										onClick={handleResetForm}
+										className="bg-red-600 hover:bg-red-700 text-white"
+									>
+										Yes, Reset Form
+									</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
+					</div>
 				</div>
+
+				{/* Auto-save indicator */}
+				{lastSaved && (
+					<div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
+						<Save className="w-3 h-3" />
+						<span>Last saved: {lastSaved.toLocaleTimeString()}</span>
+					</div>
+				)}
+
+				{/* Offline error display */}
+				{offlineError && (
+					<div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+						{offlineError}
+					</div>
+				)}
 			</div>
 
 			{/* Header with ECS branding */}
@@ -931,16 +1215,34 @@ export default function QAChecklist() {
 												<div>
 													<Label>Photos</Label>
 													<div className="flex gap-2 mt-2">
-														<Button
-															type="button"
-															variant="outline"
-															size="sm"
-															onClick={() => fileInputRef.current?.click()}
-															className="flex items-center gap-2"
-														>
-															<Camera className="w-4 h-4" />
-															Add Photo
-														</Button>
+														{isMobile ? (
+															<Button
+																type="button"
+																variant="outline"
+																size="sm"
+																onClick={() =>
+																	handleMobileCameraOpen(area.id, item.id)
+																}
+																className="flex items-center gap-2"
+																disabled={item.photos.length >= 5}
+															>
+																<Smartphone className="w-4 h-4" />
+																{item.photos.length >= 5
+																	? "Max Photos"
+																	: "Take Photo"}
+															</Button>
+														) : (
+															<Button
+																type="button"
+																variant="outline"
+																size="sm"
+																onClick={() => fileInputRef.current?.click()}
+																className="flex items-center gap-2"
+															>
+																<Camera className="w-4 h-4" />
+																Add Photo
+															</Button>
+														)}
 														<input
 															ref={fileInputRef}
 															type="file"
@@ -1007,7 +1309,11 @@ export default function QAChecklist() {
 						<Button
 							onClick={handleBack}
 							variant="outline"
-							className="flex items-center gap-2"
+							size={isMobile ? "lg" : "default"}
+							className={cn(
+								"flex items-center gap-2",
+								isMobile ? "h-12 px-6 text-base min-w-[100px]" : ""
+							)}
 						>
 							<ChevronLeft className="w-4 h-4" />
 							Back
@@ -1020,7 +1326,11 @@ export default function QAChecklist() {
 						<Button
 							onClick={handleNext}
 							disabled={!canProceedToNext()}
-							className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+							size={isMobile ? "lg" : "default"}
+							className={cn(
+								"bg-green-600 hover:bg-green-700 flex items-center gap-2",
+								isMobile ? "h-12 px-6 text-base min-w-[100px]" : ""
+							)}
 						>
 							Next
 							<ChevronRight className="w-4 h-4" />
@@ -1029,7 +1339,11 @@ export default function QAChecklist() {
 						<Button
 							onClick={handleSubmit}
 							disabled={!validateCurrentStep()}
-							className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+							size={isMobile ? "lg" : "default"}
+							className={cn(
+								"bg-green-600 hover:bg-green-700 flex items-center gap-2",
+								isMobile ? "h-12 px-6 text-base min-w-[140px]" : ""
+							)}
 						>
 							<FileText className="w-4 h-4" />
 							Generate Report

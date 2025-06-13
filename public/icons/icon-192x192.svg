@@ -1,0 +1,17 @@
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4BAA47;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3a8a37;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="19.200000000000003" fill="url(#grad)"/>
+  <g transform="translate(38.400000000000006, 38.400000000000006)">
+    <!-- Checklist icon -->
+    <rect x="19.200000000000003" y="19.200000000000003" width="76.80000000000001" height="96" rx="3.84" fill="white" opacity="0.9"/>
+    <!-- Checkmarks -->
+    <path d="M28.799999999999997 38.400000000000006 L38.400000000000006 48 L57.599999999999994 28.799999999999997" stroke="white" stroke-width="3.84" fill="none"/>
+    <path d="M28.799999999999997 57.599999999999994 L38.400000000000006 67.19999999999999 L57.599999999999994 48" stroke="white" stroke-width="3.84" fill="none"/>
+    <path d="M28.799999999999997 76.80000000000001 L38.400000000000006 86.4 L57.599999999999994 67.19999999999999" stroke="white" stroke-width="3.84" fill="none"/>
+  </g>
+</svg>

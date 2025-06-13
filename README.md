@@ -51,19 +51,124 @@ A modern, morale-positive Quality Assurance application for janitorial inspectio
 
 ```
 components/
-├── qa-checklist.tsx          # Main QA form component
+├── qa-checklist.tsx          # Main QA form component with offline capabilities
 ├── qa-report.tsx             # Report generation and display
+├── mobile-camera.tsx         # Mobile-optimized camera component
+├── offline-indicator.tsx     # Network status and sync indicator
 ├── mobile-janitorial-checklist.tsx  # Legacy component (kept for reference)
 └── ui/                       # Reusable UI components
 ```
 
+### **Mobile & Offline Infrastructure**
+
+```
+lib/
+├── offline-storage.ts        # IndexedDB wrapper for offline data
+├── types.ts                  # Shared TypeScript interfaces
+└── utils.ts                  # Utility functions
+
+hooks/
+├── use-offline-storage.ts    # React hook for offline functionality
+├── use-mobile.tsx           # Mobile device detection
+└── use-toast.ts             # Toast notifications
+
+public/
+├── manifest.json            # PWA manifest
+├── sw.js                    # Service worker for offline functionality
+├── offline.html             # Offline fallback page
+└── icons/                   # PWA icons for various devices
+```
+
 ### **Key Technologies**
 
-- **Next.js 15** - React framework
+- **Next.js 15** - React framework with App Router
 - **TypeScript** - Type safety
-- **Tailwind CSS** - Styling
+- **Tailwind CSS** - Styling with mobile-first approach
 - **Radix UI** - Accessible components
 - **Lucide React** - Icons
+- **IndexedDB** - Client-side database for offline storage
+- **Service Workers** - Background sync and caching
+- **PWA** - Progressive Web App capabilities
+
+## 📱 **Mobile Optimization Features**
+
+### **Progressive Web App (PWA)**
+
+- **Installable**: Add to home screen on iOS/Android
+- **Offline-first**: Works without internet connection
+- **App-like experience**: Full-screen, native feel
+- **Background sync**: Auto-sync when connection returns
+
+### **Mobile-Optimized UI**
+
+- **Touch-friendly**: Large touch targets (44px minimum)
+- **Responsive design**: Optimized for iPhone/iPad screens
+- **Safe area support**: Handles notches and home indicators
+- **High contrast mode**: Better visibility in outdoor conditions
+
+### **Enhanced Camera Integration**
+
+- **Native camera access**: Direct camera integration
+- **Photo optimization**: Automatic compression and resizing
+- **Multiple capture modes**: Front/back camera switching
+- **Zoom controls**: Digital zoom for detailed shots
+- **Flash support**: LED flash control
+
+### **Offline Capabilities**
+
+- **Local storage**: IndexedDB for form data and photos
+- **Auto-save**: Continuous form state preservation
+- **Sync queue**: Pending submissions when offline
+- **Storage management**: Usage monitoring and cleanup
+
+### **Field-Optimized Features**
+
+- **Glove-friendly**: Large buttons and simplified navigation
+- **Battery efficient**: Optimized for extended field use
+- **Network resilient**: Graceful handling of poor connectivity
+- **Data compression**: Efficient photo and form data storage
+
+## 🔧 **Installation & Setup**
+
+### **Development**
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+```
+
+### **Mobile Testing**
+
+1. **Local Network Testing**:
+
+   ```bash
+   # Find your local IP
+   ipconfig getifaddr en0  # macOS
+   ip route get 1 | awk '{print $7}' # Linux
+
+   # Access from mobile device
+   http://[YOUR_IP]:3000
+   ```
+
+2. **PWA Installation**:
+   - Open in mobile browser
+   - Tap "Add to Home Screen" (iOS) or "Install" (Android)
+   - App will appear on home screen
+
+### **Production Deployment**
+
+- Deploy to Vercel, Netlify, or any Node.js hosting
+- Ensure HTTPS for PWA features
+- Configure service worker caching strategy
 
 ### **Data Structure**
 
