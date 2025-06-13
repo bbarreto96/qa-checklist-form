@@ -87,13 +87,5 @@
 				}
 			]
 		}
-	],
-	"functions": {
-		"app/api/submit-qa-form/route.ts": {
-			"maxDuration": 30
-		},
-		"app/api/submit-to-sheets/route.ts": {
-			"maxDuration": 30
-		}
-	}
+	]
 }
