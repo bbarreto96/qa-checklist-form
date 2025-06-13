@@ -1,17 +1,55 @@
 <svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#4BAA47;stop-opacity:1" />
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f8f9fa;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="greenGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7BC142;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#4BAA47;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#3a8a37;stop-opacity:1" />
     </linearGradient>
   </defs>
-  <rect width="180" height="180" rx="18" fill="url(#grad)"/>
-  <g transform="translate(36, 36)">
-    <!-- Checklist icon -->
-    <rect x="18" y="18" width="72" height="90" rx="3.6" fill="white" opacity="0.9"/>
-    <!-- Checkmarks -->
-    <path d="M27 36 L36 45 L54 27" stroke="white" stroke-width="3.6" fill="none"/>
-    <path d="M27 54 L36 62.99999999999999 L54 45" stroke="white" stroke-width="3.6" fill="none"/>
-    <path d="M27 72 L36 81 L54 62.99999999999999" stroke="white" stroke-width="3.6" fill="none"/>
+
+  <!-- Background with subtle gradient -->
+  <rect width="180" height="180" rx="18" fill="url(#bgGrad)"/>
+
+  <!-- Element Cleaning Systems Logo (scaled and centered) -->
+  <g transform="translate(9, 18) scale(0.405)">
+    <!-- Green swoosh curves (simplified for smaller icons) -->
+    
+    <path d="M0 300 Q60 200 120 250 Q180 300 240 270 Q300 240 360 260"
+          stroke="url(#greenGradient)" stroke-width="5.4" fill="none" opacity="0.8"/>
+    <path d="M0 320 Q72 220 144 270 Q216 320 288 290 Q360 260 400 280"
+          stroke="url(#greenGradient)" stroke-width="3.6" fill="none" opacity="0.6"/>
+    
+
+    <!-- Main text "Element" -->
+    <text x="9" y="81" font-family="Arial, sans-serif"
+          font-size="54" font-weight="bold" fill="#1a5f1a">Element</text>
+
+    <!-- Cleaning Systems text (only show on larger icons) -->
+    
+
+    <!-- Spray bottle icon (simplified for smaller sizes) -->
+    <g transform="translate(200, 22.5)">
+      <!-- Bottle body -->
+      <rect x="0" y="18" width="13.5" height="36"
+            rx="2.25" fill="#4BAA47"/>
+      <!-- Bottle neck -->
+      <rect x="3.6" y="13.5" width="6.3"
+            height="6.75" fill="#4BAA47"/>
+      <!-- Trigger -->
+      <path d="M13.5 22.5 Q18 20.25
+               20.25 24.75 Q18 29.25
+               13.5 27" fill="#4BAA47"/>
+
+      
+      <!-- Spray dots -->
+      <circle cx="29.25" cy="18" r="0.9" fill="#7BC142" opacity="0.8"/>
+      <circle cx="31.5" cy="20.25" r="0.675" fill="#7BC142" opacity="0.6"/>
+      <circle cx="30.6" cy="24.75" r="0.675" fill="#7BC142" opacity="0.6"/>
+      
+    </g>
   </g>
 </svg>

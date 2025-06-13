@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 400">
+  <!-- Element Cleaning Systems Logo - Original -->
+  
+  <!-- Green swoosh curves -->
+  <defs>
+    <linearGradient id="greenGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7BC142;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#4BAA47;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3a8a37;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background swoosh curves -->
+  <path d="M0 300 Q150 200 300 250 Q450 300 600 270 Q750 240 900 260" 
+        stroke="url(#greenGradient)" stroke-width="12" fill="none" opacity="0.8"/>
+  <path d="M0 320 Q180 220 360 270 Q540 320 720 290 Q900 260 1024 280" 
+        stroke="url(#greenGradient)" stroke-width="8" fill="none" opacity="0.6"/>
+  <path d="M0 340 Q200 240 400 290 Q600 340 800 310 Q900 295 1024 300" 
+        stroke="url(#greenGradient)" stroke-width="6" fill="none" opacity="0.4"/>
+  
+  <!-- Main text "Element" -->
+  <text x="80" y="180" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="#1a5f1a">Element</text>
+  
+  <!-- Cleaning Systems text -->
+  <text x="280" y="280" font-family="Arial, sans-serif" font-size="32" font-weight="normal" fill="#1a5f1a" letter-spacing="8">CLEANING SYSTEMS</text>
+  
+  <!-- Spray bottle icon with dotted spray -->
+  <g transform="translate(850, 50)">
+    <!-- Bottle body -->
+    <rect x="0" y="40" width="30" height="80" rx="5" fill="#4BAA47"/>
+    <!-- Bottle neck -->
+    <rect x="8" y="30" width="14" height="15" fill="#4BAA47"/>
+    <!-- Trigger -->
+    <path d="M30 50 Q40 45 45 55 Q40 65 30 60" fill="#4BAA47"/>
+    <!-- Spray dots with dotted lines -->
+    <g stroke="#7BC142" stroke-width="2" stroke-dasharray="3,2" fill="none">
+      <path d="M45 50 Q55 45 65 40"/>
+      <path d="M45 55 Q58 50 70 45"/>
+      <path d="M45 60 Q55 58 65 55"/>
+    </g>
+    <!-- Spray droplets -->
+    <circle cx="65" cy="40" r="2" fill="#7BC142" opacity="0.8"/>
+    <circle cx="70" cy="45" r="1.5" fill="#7BC142" opacity="0.6"/>
+    <circle cx="75" cy="35" r="1" fill="#7BC142" opacity="0.4"/>
+    <circle cx="68" cy="55" r="1.5" fill="#7BC142" opacity="0.6"/>
+    <circle cx="72" cy="50" r="1" fill="#7BC142" opacity="0.4"/>
+  </g>
+</svg>

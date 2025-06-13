@@ -6,7 +6,9 @@
 		"dev": "next dev -H 0.0.0.0",
 		"build": "next build",
 		"start": "next start",
-		"lint": "next lint"
+		"lint": "next lint",
+		"generate-icons": "node scripts/generate-icons.js",
+		"convert-icons": "node scripts/convert-icons-to-png.js"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.9.1",
